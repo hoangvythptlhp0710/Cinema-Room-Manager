@@ -1,6 +1,8 @@
 package cinema;
 
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Scanner;
 
 class Seat {
@@ -19,10 +21,26 @@ public class Cinema {
     private static int col;
     private static String[][] seats;
 
+    private static int count;
+
+    private static int currentIncome;
+
+
     private Cinema(int row, int col) {
-        this.row = row;
-        this.col = col;
+        Cinema.row = row;
+        Cinema.col = col;
         seats = createEmptyMatrix(row, col);
+    }
+
+    private static int getTotalIncome(int row, int col) {
+        int totalSeats = row * col;
+        if (totalSeats <= 60) {
+            return totalSeats * 10;
+        } else {
+            int frontRow = row / 2;
+            int backRow = row - frontRow;
+            return frontRow * col * 10 + backRow * col * 8;
+        }
     }
 
     private static String[][] createEmptyMatrix(int row, int col) {
@@ -88,8 +106,17 @@ public class Cinema {
         System.out.println("Enter a seat number in that row: ");
         System.out.print("> ");
         int col = sc.nextInt();
-
-        return new Seat(row, col);
+        if (row > Cinema.row || col > Cinema.col) {
+            System.out.println("Wrong input!");
+            return readSeat();
+        }
+        else if (seats[row-1][col-1].equals("B")) {
+            System.out.println("That ticket has already been purchased!");
+            return readSeat();
+        }
+        else {
+            return new Seat(row, col);
+        }
     }
 
     private void printPrice(Seat seat) {
@@ -102,24 +129,30 @@ public class Cinema {
         else {
             price = 8;
         }
-
+        currentIncome += price;
         System.out.printf("Ticket price: $%s", price);
         System.out.println();
     }
 
-    private void showMenu() {}
-
+    private static void statistics() {
+        float result = (float) count / (row * col) * 100;
+        System.out.printf("Number of purchased tickets: %d%n", count);
+        System.out.printf("Percentage: %.2f%%", result);
+        System.out.println();
+        System.out.println("Current income: $" + currentIncome);
+        System.out.println("Total income: $" + getTotalIncome(row, col));
+    }
 
     public static void main(String[] args) {
         // Write your code here
         Cinema cinema = readCinema();
-
 
         Scanner sc = new Scanner(System.in);
         while (true) {
             System.out.println();
             System.out.println("1. Show the seats");
             System.out.println("2. Buy a ticket");
+            System.out.println("3. Statistics");
             System.out.println("0. Exit");
             System.out.println();
             int option = sc.nextInt();
@@ -131,7 +164,10 @@ public class Cinema {
                     Seat seat = readSeat();
                     cinema.takeSeat(seat);
                     cinema.printPrice(seat);
-                    cinema.print();
+                    count++;
+                }
+                case 3 -> {
+                    statistics();
                 }
                 case 0 -> {
                     return;
